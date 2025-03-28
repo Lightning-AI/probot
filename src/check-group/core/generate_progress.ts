@@ -76,7 +76,11 @@ export const generateProgressDetailsCLI = (
   for (const availableCheck in postedChecks) {
     longestLength = Math.max(longestLength, availableCheck.length);
   }
-  postedChecks.sort((a, b) => a.localeCompare(b))
+const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
+    Object.keys(postedChecks)
+        .sort() // Sort the keys as strings
+        .map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
+);
   for (const availableCheck in postedChecks) {
     const mark = statusToMark(availableCheck, postedChecks);
     const status = parseStatus(availableCheck, postedChecks);
