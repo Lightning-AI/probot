@@ -76,12 +76,12 @@ export const generateProgressDetailsCLI = (
   for (const availableCheck in postedChecks) {
     longestLength = Math.max(longestLength, availableCheck.length);
   }
-const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
-    Object.keys(postedChecks)
-        .sort() // Sort the keys as strings
-        .map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
-);
-  for (const availableCheck in postedChecks) {
+  const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
+      Object.keys(postedChecks)
+          .sort() // Sort the keys as strings
+          .map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
+  );
+  for (const availableCheck in sortedPostedChecks) {
     const mark = statusToMark(availableCheck, postedChecks);
     const status = parseStatus(availableCheck, postedChecks);
     progress += `${availableCheck.padEnd(longestLength, ' ')} | ${mark} | ${status.padEnd(12, ' ')}\n`;
