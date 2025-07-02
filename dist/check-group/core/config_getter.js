@@ -91,14 +91,14 @@ var fetchConfig = function (context) { return __awaiter(void 0, void 0, void 0, 
                 core.debug("fetchConfig ".concat(repoFullName, " ").concat(githubRepository));
                 if (!(repoFullName == githubRepository)) return [3 /*break*/, 2];
                 prBranch = payload.pull_request.head.ref;
-                core.info("The PR is from a branch in the repository. Reading the config in ".concat(prBranch));
+                core.info("The PR is from a branch in the repository. Reading the config in '".concat(prBranch, "'"));
                 return [4 /*yield*/, readConfig(context, prBranch)];
             case 1:
                 configData = _a.sent();
                 return [3 /*break*/, 4];
             case 2:
                 baseBranch = payload.pull_request.base.ref;
-                core.info("The PR is from a fork (".concat(repoFullName, "). For security, reading the config in ").concat(baseBranch));
+                core.info("The PR is from a fork: '".concat(repoFullName, "'. For security, reading the config in '").concat(baseBranch, "'"));
                 return [4 /*yield*/, readConfig(context, baseBranch)];
             case 3:
                 configData = _a.sent();

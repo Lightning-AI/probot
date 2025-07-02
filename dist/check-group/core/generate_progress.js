@@ -95,10 +95,14 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
     for (var availableCheck in postedChecks) {
         longestLength = Math.max(longestLength, availableCheck.length);
     }
-    for (var availableCheck in postedChecks) {
+    var sortedPostedChecks = Object.fromEntries(Object.keys(postedChecks)
+        .sort(function (a, b) { return a.localeCompare(b); })
+        .map(function (key) { return [key, postedChecks[key]]; }) // Map sorted keys back to their values
+    );
+    for (var availableCheck in sortedPostedChecks) {
         var mark = statusToMark(availableCheck, postedChecks);
         var status_1 = parseStatus(availableCheck, postedChecks);
-        progress += "".concat(availableCheck.padEnd(longestLength, ' '), " | ").concat(mark, " | ").concat(status_1.padEnd(12, ' '), "\n");
+        progress += "".concat(availableCheck.padEnd(longestLength, ' '), " ??!?? | ").concat(mark, " | ").concat(status_1.padEnd(12, ' '), "\n");
     }
     progress += "\n";
     return progress;
