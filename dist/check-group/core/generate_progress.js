@@ -91,7 +91,7 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
         });
         progress += "\n\n";
     });
-    progress += "\n";
+    progress += "\n\n";
     progress += "## Currently received checks\n";
     var longestLength = 1;
     for (var availableCheck in postedChecks) {

@@ -71,8 +71,7 @@ export const generateProgressDetailsCLI = (
     });
     progress += "\n\n";
   });
-  progress += "\n";
-
+  progress += "\n\n";
   progress += "## Currently received checks\n";
   let longestLength = 1;
   for (const availableCheck in postedChecks) {
