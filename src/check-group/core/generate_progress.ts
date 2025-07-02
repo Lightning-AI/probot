@@ -73,7 +73,7 @@ export const generateProgressDetailsCLI = (
   });
   progress += "\n";
 
-  progress += "## Currently received checks\n";
+  progress += "\n\n## Currently received checks\n";
   let longestLength = 1;
   for (const availableCheck in postedChecks) {
     longestLength = Math.max(longestLength, availableCheck.length);
@@ -94,7 +94,7 @@ export const generateProgressDetailsMarkdown = (
   subprojects: SubProjConfig[],
   postedChecks: Record<string, CheckRunData>,
 ): string => {
-  let progress = "## Groups summary\n\n";
+  let progress = "\n\n## Groups summary\n\n";
   subprojects.forEach((subproject) => {
     // get the aggregated status of all statuses in the subproject
     const checkResult = getChecksResult(subproject.checks, postedChecks)

@@ -92,7 +92,7 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
         progress += "\n\n";
     });
     progress += "\n";
-    progress += "## Currently received checks\n";
+    progress += "\n\n## Currently received checks\n";
     var longestLength = 1;
     for (var availableCheck in postedChecks) {
         longestLength = Math.max(longestLength, availableCheck.length);
@@ -109,7 +109,7 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
 };
 exports.generateProgressDetailsCLI = generateProgressDetailsCLI;
 var generateProgressDetailsMarkdown = function (subprojects, postedChecks) {
-    var progress = "## Groups summary\n\n";
+    var progress = "\n\n## Groups summary\n\n";
     subprojects.forEach(function (subproject) {
         // get the aggregated status of all statuses in the subproject
         var checkResult = (0, satisfy_expected_checks_1.getChecksResult)(subproject.checks, postedChecks);
