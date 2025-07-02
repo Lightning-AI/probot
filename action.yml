@@ -1,4 +1,4 @@
-name: 'carmocca Lightning Probot'
+name: 'Lightning Probot'
 description: 'Probot for PyTorch Lightning.'
 inputs:
   job:
