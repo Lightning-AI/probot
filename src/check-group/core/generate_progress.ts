@@ -78,7 +78,10 @@ export const generateProgressDetailsCLI = (
   for (const availableCheck in postedChecks) {
     longestLength = Math.max(longestLength, availableCheck.length);
   }
-  for (const availableCheck in postedChecks) {
+  const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
+      Object.keys(postedChecks).sort().map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
+  );
+  for (const availableCheck in sortedPostedChecks) {
     const mark = statusToMark(availableCheck, postedChecks);
     const status = parseStatus(availableCheck, postedChecks);
     progress += `${availableCheck.padEnd(longestLength, ' ')} | ${mark} | ${status.padEnd(12, ' ')}\n`;
@@ -137,7 +140,10 @@ function formPrComment(
     + ` If you do not have write access to the repository, you can ask \`${inputs.maintainers}\` to re-run it.`
     + " If you push a new commit, all of CI will re-trigger.\n\n"
   )
-  const progressDetails = generateProgressDetailsMarkdown(subprojects, postedChecks)
+  const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
+      Object.keys(postedChecks).sort().map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
+  );
+  const progressDetails = generateProgressDetailsMarkdown(subprojects, sortedPostedChecks)
   return (
     PR_COMMENT_START
     + `\n# ${lightning} Required checks status: ${parsedConclusion} ${conclusionEmoji}\n\n`
