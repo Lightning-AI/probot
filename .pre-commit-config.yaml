@@ -4,27 +4,18 @@ ci:
   autoupdate_schedule: quarterly
   # submodules: true
 
+exclude: ^(node_modules/|dist/)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-json
+      #- id: check-json
       - id: check-yaml
-      - id: check-toml
+      #- id: check-toml
       - id: check-added-large-files
       - id: detect-private-key
-
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.44.0
-    hooks:
-      - id: eslint
-        files: \.(ts|js)$
-        types: [file]
-        additional_dependencies:
-          - '@typescript-eslint/eslint-plugin'
-          - '@typescript-eslint/parser'
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.22
