@@ -84,7 +84,7 @@ export const generateProgressDetailsCLI = (
   for (const availableCheck in sortedPostedChecks) {
     const mark = statusToMark(availableCheck, postedChecks);
     const status = parseStatus(availableCheck, postedChecks);
-    progress += `${availableCheck.padEnd(longestLength, ' ')} | ${mark} | ${status.padEnd(12, ' ')}\n`;
+    progress += `${availableCheck.padEnd(longestLength, ' ')} ??!?? | ${mark} | ${status.padEnd(12, ' ')}\n`;
   }
   progress += "\n";
   return progress;
