@@ -95,9 +95,7 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
     for (var availableCheck in postedChecks) {
         longestLength = Math.max(longestLength, availableCheck.length);
     }
-    var sortedPostedChecks = Object.fromEntries(Object.keys(postedChecks)
-        .sort() // Sort the keys as strings
-        .map(function (key) { return [key, postedChecks[key]]; }) // Map sorted keys back to their values
+    var sortedPostedChecks = Object.fromEntries(Object.keys(postedChecks).sort().map(function (key) { return [key, postedChecks[key]]; }) // Map sorted keys back to their values
     );
     for (var availableCheck in sortedPostedChecks) {
         var mark = statusToMark(availableCheck, postedChecks);
@@ -148,7 +146,9 @@ function formPrComment(result, inputs, subprojects, postedChecks) {
     var failedMesage = ("> **Warning**\n> This job will need to be re-run to merge your PR."
         + " If you do not have write access to the repository, you can ask `".concat(inputs.maintainers, "` to re-run it.")
         + " If you push a new commit, all of CI will re-trigger.\n\n");
-    var progressDetails = (0, exports.generateProgressDetailsMarkdown)(subprojects, postedChecks);
+    var sortedPostedChecks = Object.fromEntries(Object.keys(postedChecks).sort().map(function (key) { return [key, postedChecks[key]]; }) // Map sorted keys back to their values
+    );
+    var progressDetails = (0, exports.generateProgressDetailsMarkdown)(subprojects, sortedPostedChecks);
     return (PR_COMMENT_START
         + "\n# ".concat(lightning, " Required checks status: ").concat(parsedConclusion, " ").concat(conclusionEmoji, "\n\n")
         + ((hasFailed) ? failedMesage : "")
