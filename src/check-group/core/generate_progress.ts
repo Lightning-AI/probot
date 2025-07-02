@@ -78,7 +78,7 @@ export const generateProgressDetailsCLI = (
   }
   const sortedPostedChecks: Record<string, CheckRunData> = Object.fromEntries(
       Object.keys(postedChecks)
-          .sort((a, b) => a.localeCompare(b))
+          .sort() // Sort the keys as strings
           .map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
   );
   for (const availableCheck in sortedPostedChecks) {
