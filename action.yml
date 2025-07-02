@@ -15,5 +15,5 @@ inputs:
     required: false
     default: 120  # seconds
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/action.js'
