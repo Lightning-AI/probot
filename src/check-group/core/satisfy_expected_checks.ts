@@ -7,7 +7,7 @@ export const getChecksResult = (
   let result: CheckResult = "all_passing";
   for (const check of checks) {
     if (check in postedChecks) {
-      const conclusion = postedChecks[check].conclusion; 
+      const conclusion = postedChecks[check].conclusion;
       if (conclusion === null) {
         // the check is in progress
         result = "pending";
@@ -31,7 +31,7 @@ export const getSubProjResult = (
   for (const subProj of subProjs) {
     for (const check of subProj.checks) {
       if (check in postedChecks) {
-        const conclusion = postedChecks[check].conclusion; 
+        const conclusion = postedChecks[check].conclusion;
         if (conclusion === null) {
           // the check is in progress
           result = "pending";

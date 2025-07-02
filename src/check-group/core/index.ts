@@ -77,7 +77,7 @@ export class CheckGroup {
           + ` If you do not have write access to the repository you can ask ${maintainers} to re-run it for you.`
           + ` If you have any other questions, you can reach out to ${owner} for help.`
         )
-      }, timeout * 60 * 1000 
+      }, timeout * 60 * 1000
     )
   }
 
@@ -90,7 +90,7 @@ export class CheckGroup {
       const result = getSubProjResult(subprojs, postedChecks);
       this.notifyProgress(subprojs, postedChecks, result)
       core.endGroup();
-    
+
       if (result === "all_passing") {
         core.info("All required checks were successful!")
         clearTimeout(this.intervalTimer)
@@ -98,7 +98,7 @@ export class CheckGroup {
       } else {
         this.intervalTimer = setTimeout(() => this.runCheck(subprojs, tries + 1, interval), interval);
       }
-      
+
     } catch (error) {
       // bubble up the error to the job
       core.setFailed(error);
@@ -130,7 +130,7 @@ export class CheckGroup {
         throw e
       }
     }
-  } 
+  }
 
   /**
    * Gets a list of files that are modified in

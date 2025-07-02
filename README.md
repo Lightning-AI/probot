@@ -24,10 +24,7 @@ Adaptation of https://github.com/tianhaoz95/check-group/blob/master/README.md th
 ## Setup
 
 ```sh
-yarn install
-yarn format
-yarn lint
-yarn build
+make build
 ```
 
 ## Deploying GitHub Actions

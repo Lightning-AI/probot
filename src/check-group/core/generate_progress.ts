@@ -45,7 +45,7 @@ const parseStatus = (
   if (check in postedChecks) {
     const checkData = postedChecks[check]
     if (checkData.conclusion === null) {
-      return checkData.status        
+      return checkData.status
     } else {
       return checkData.conclusion
     }

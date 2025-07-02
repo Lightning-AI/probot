@@ -1,0 +1,15 @@
+name: General checks
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  check-precommit:
+    uses: Lightning-AI/utilities/.github/workflows/check-precommit.yml@main
