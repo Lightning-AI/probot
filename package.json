@@ -1,6 +1,6 @@
 {
   "name": "lightning-probot",
-  "version": "0.1.0",
+  "version": "5.5",
   "description": "Bot actions for PyTorch Lightning",
   "author": "Carlos Mocholí <carlos@lightning.ai> (https://lightning.ai)",
   "license": "ISC",
