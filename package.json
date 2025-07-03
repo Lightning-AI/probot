@@ -19,12 +19,12 @@
     "format": "prettier --write **/*.ts"
   },
   "dependencies": {
-    "@octokit/core": "^3.6.0",
+    "@octokit/core": "^7.0.2",
     "@octokit/webhooks-types": "^6.3.6",
-    "@probot/adapter-github-actions": "^3.1.1",
+    "@probot/adapter-github-actions": "^4.0.3",
     "@probot/octokit-plugin-config": "^1.1.6",
     "minimatch": "^5.1.0",
-    "probot": "^12.2.5"
+    "probot": "^13.4.5"
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.6",
