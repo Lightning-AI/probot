@@ -110,7 +110,8 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
 exports.generateProgressDetailsCLI = generateProgressDetailsCLI;
 var generateProgressDetailsMarkdown = function (subprojects, postedChecks) {
     var TOTAL_PATHS_CHAR_BUDGET = 50000;
-    var perSubjectPathCharSoftLimit = Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1)));
+    var PATHS_SOFT_CHAR_LIMIT = 1000;
+    var perSubjectPathCharSoftLimit = Math.min(PATHS_SOFT_CHAR_LIMIT, Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1))));
     var progress = "## Groups summary\n\n";
     subprojects.forEach(function (subproject) {
         // get the aggregated status of all statuses in the subproject

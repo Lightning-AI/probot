@@ -94,7 +94,8 @@ export const generateProgressDetailsMarkdown = (
   postedChecks: Record<string, CheckRunData>,
 ): string => {
   const TOTAL_PATHS_CHAR_BUDGET = 50000;
-  const perSubjectPathCharSoftLimit = Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1)));
+  const PATHS_SOFT_CHAR_LIMIT = 1000;
+  const perSubjectPathCharSoftLimit = Math.min(PATHS_SOFT_CHAR_LIMIT, Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1))));
   let progress = "## Groups summary\n\n";
   subprojects.forEach((subproject) => {
     // get the aggregated status of all statuses in the subproject
