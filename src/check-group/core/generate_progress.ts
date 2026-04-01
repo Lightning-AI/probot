@@ -93,6 +93,8 @@ export const generateProgressDetailsMarkdown = (
   subprojects: SubProjConfig[],
   postedChecks: Record<string, CheckRunData>,
 ): string => {
+  const TOTAL_PATHS_CHAR_BUDGET = 50000;
+  const perSubjectPathCharSoftLimit = Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1)));
   let progress = "## Groups summary\n\n";
   subprojects.forEach((subproject) => {
     // get the aggregated status of all statuses in the subproject
@@ -114,7 +116,19 @@ export const generateProgressDetailsMarkdown = (
       const mark = statusToMark(check, postedChecks);
       progress += `| ${link} | ${status} | ${mark} |\n`;
     })
-    progress += `\nThese checks are required after the changes to \`${subproject.paths.join("`, `")}\`.\n`
+    let pathsStr = "";
+    for (const p of subproject.paths) {
+      const entry = pathsStr ? `, \`${p}\`` : `\`${p}\``;
+      pathsStr += entry;
+      if (pathsStr.length > perSubjectPathCharSoftLimit) {
+        const remaining = subproject.paths.length - (pathsStr.match(/`[^`]+`/g) || []).length;
+        if (remaining >= 2) {
+          pathsStr += `, and ${remaining} more files`;
+          break;
+        }
+      }
+    }
+    progress += `\nThese checks are required after the changes to ${pathsStr}.\n`
     progress += "\n</details>\n\n";
   });
   return progress;
@@ -143,7 +157,10 @@ function formPrComment(
       Object.keys(postedChecks).sort().map(key => [key, postedChecks[key]]) // Map sorted keys back to their values
   );
   const progressDetails = generateProgressDetailsMarkdown(subprojects, sortedPostedChecks)
-  return (
+  const MAX_COMMENT_LENGTH_GITHUB = 65536;
+  // Add some buffer in case we need it
+  const MAX_COMMENT_LENGTH = MAX_COMMENT_LENGTH_GITHUB - 1000;
+  let comment = (
     PR_COMMENT_START
     + `\n# ${lightning} Required checks status: ${parsedConclusion} ${conclusionEmoji}\n\n`
     + ((hasFailed) ? failedMesage : "")
@@ -153,6 +170,11 @@ function formPrComment(
     + `> **Note**\n> This comment is automatically generated and updates for ${inputs.timeout} minutes every ${inputs.interval} seconds.`
     + ` If you have any other questions, contact \`${inputs.owner}\` for help.`
   )
+  if (comment.length > MAX_COMMENT_LENGTH) {
+    const suffix = "\n\n---\n\n> **Note**: Comment was truncated because it exceeded GitHub's 65536 character limit.";
+    comment = comment.slice(0, MAX_COMMENT_LENGTH - suffix.length) + suffix;
+  }
+  return comment
 }
 
 async function getPrComment(context: Context): Promise<{id: number; body: string}> {

@@ -109,6 +109,8 @@ var generateProgressDetailsCLI = function (subprojects, postedChecks) {
 };
 exports.generateProgressDetailsCLI = generateProgressDetailsCLI;
 var generateProgressDetailsMarkdown = function (subprojects, postedChecks) {
+    var TOTAL_PATHS_CHAR_BUDGET = 50000;
+    var perSubjectPathCharSoftLimit = Math.max(100, Math.floor(TOTAL_PATHS_CHAR_BUDGET / (subprojects.length || 1)));
     var progress = "## Groups summary\n\n";
     subprojects.forEach(function (subproject) {
         // get the aggregated status of all statuses in the subproject
@@ -131,7 +133,20 @@ var generateProgressDetailsMarkdown = function (subprojects, postedChecks) {
             var mark = statusToMark(check, postedChecks);
             progress += "| ".concat(link, " | ").concat(status, " | ").concat(mark, " |\n");
         });
-        progress += "\nThese checks are required after the changes to `".concat(subproject.paths.join("`, `"), "`.\n");
+        var pathsStr = "";
+        for (var _i = 0, _a = subproject.paths; _i < _a.length; _i++) {
+            var p = _a[_i];
+            var entry = pathsStr ? ", `".concat(p, "`") : "`".concat(p, "`");
+            pathsStr += entry;
+            if (pathsStr.length > perSubjectPathCharSoftLimit) {
+                var remaining = subproject.paths.length - (pathsStr.match(/`[^`]+`/g) || []).length;
+                if (remaining >= 2) {
+                    pathsStr += ", and ".concat(remaining, " more files");
+                    break;
+                }
+            }
+        }
+        progress += "\nThese checks are required after the changes to ".concat(pathsStr, ".\n");
         progress += "\n</details>\n\n";
     });
     return progress;
@@ -151,7 +166,10 @@ function formPrComment(result, inputs, subprojects, postedChecks) {
     var sortedPostedChecks = Object.fromEntries(Object.keys(postedChecks).sort().map(function (key) { return [key, postedChecks[key]]; }) // Map sorted keys back to their values
     );
     var progressDetails = (0, exports.generateProgressDetailsMarkdown)(subprojects, sortedPostedChecks);
-    return (PR_COMMENT_START
+    var MAX_COMMENT_LENGTH_GITHUB = 65536;
+    // Add some buffer in case we need it
+    var MAX_COMMENT_LENGTH = MAX_COMMENT_LENGTH_GITHUB - 1000;
+    var comment = (PR_COMMENT_START
         + "\n# ".concat(lightning, " Required checks status: ").concat(parsedConclusion, " ").concat(conclusionEmoji, "\n\n")
         + ((hasFailed) ? failedMesage : "")
         + ((subprojects.length) ? progressDetails : "No groups match the files changed in this PR.\n\n")
@@ -159,6 +177,11 @@ function formPrComment(result, inputs, subprojects, postedChecks) {
         + "Thank you for your contribution! 💜\n\n"
         + "> **Note**\n> This comment is automatically generated and updates for ".concat(inputs.timeout, " minutes every ").concat(inputs.interval, " seconds.")
         + " If you have any other questions, contact `".concat(inputs.owner, "` for help."));
+    if (comment.length > MAX_COMMENT_LENGTH) {
+        var suffix = "\n\n---\n\n> **Note**: Comment was truncated because it exceeded GitHub's 65536 character limit.";
+        comment = comment.slice(0, MAX_COMMENT_LENGTH - suffix.length) + suffix;
+    }
+    return comment;
 }
 function getPrComment(context) {
     return __awaiter(this, void 0, void 0, function () {

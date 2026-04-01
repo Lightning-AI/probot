@@ -34,6 +34,16 @@ https://github.com/actions/toolkit/blob/master/docs/action-versioning.md
 
 ## Contributing
 
+### Development Guide on this fork
+
+- `node_modules` and `dist` are source controlled because it's needed for github actions. Alternatively, we could use something like `@vercel/ncc` in future to avoid this.
+- To develop:
+  - Install yarn: `npm install -g yarn`
+  - When done, run `yun format && yarn lint && yarn build`
+  - If you make any changes to dependencies, use `yarn install --frozen-lockfile`
+
+### Other
+
 If you feel like an improvement could be made, please open an issue in the PyTorch Lightning repository instead.
 
 https://github.com/PyTorchLightning/pytorch-lightning
