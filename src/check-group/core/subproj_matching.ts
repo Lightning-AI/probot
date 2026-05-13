@@ -21,7 +21,12 @@ export const matchFilenamesToSubprojects = (
       // https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-and-excluding-paths
       const isNegation = path.startsWith("!")
       // https://www.npmjs.com/package/minimatch
-      const matches = minimatch.match(filenames, path, {"flipNegate": isNegation})
+      // `dot: true` aligns with GitHub Actions' own `paths:` filter, which uses
+      // minimatch with the same option — without it, patterns like `**` would
+      // silently fail to match paths containing dot-prefixed segments (e.g.
+      // `.github/foo` or `my-project/.env.staging`), causing subprojects to
+      // appear inactive for PRs that touch only such paths.
+      const matches = minimatch.match(filenames, path, {"flipNegate": isNegation, "dot": true})
       // if it's a negation, delete from the list of hits, otherwise add
       matches.forEach((match: string) => (isNegation) ? hits.delete(match): hits.add(match))
     });
