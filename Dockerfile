@@ -1,4 +1,4 @@
-FROM node:12 as install
+FROM node:24 as install
 WORKDIR /build
 COPY tsconfig.json .
 COPY package.json .
@@ -9,7 +9,7 @@ COPY src/ src/
 FROM install as build
 RUN yarn build
 
-FROM node:12 as prod-build
+FROM node:24 as prod-build
 WORKDIR /out
 COPY package.json .
 RUN yarn install --production
