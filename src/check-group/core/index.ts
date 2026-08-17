@@ -12,7 +12,7 @@ import { getSubProjResult } from "./satisfy_expected_checks";
 import { fetchConfig } from "./config_getter";
 import type { CheckGroupConfig, CheckResult, SubProjConfig } from "../types";
 import type { Context } from "probot";
-import { RequestError } from "@octokit/request-error";
+import { describeError, httpStatus, isTransientError, withTransientRetry } from "./transient_error";
 
 /**
  * The orchestration class.
@@ -28,6 +28,7 @@ export class CheckGroup {
   inputs: Record<string, any> = {};
 
   canComment: boolean = true;
+  lastTransientError: string = "";
 
   constructor(
     pullRequestNumber: number,
@@ -73,6 +74,9 @@ export class CheckGroup {
         clearTimeout(this.intervalTimer)
         core.setFailed(
           `The timeout of ${timeout} minutes has triggered but not all required jobs were passing.`
+          + (this.lastTransientError
+            ? ` The GitHub API was also returning errors, the last being: ${this.lastTransientError}`
+            : ``)
           + ` This job will need to be re-run to merge your PR.`
           + ` If you do not have write access to the repository you can ask ${maintainers} to re-run it for you.`
           + ` If you have any other questions, you can reach out to ${owner} for help.`
@@ -88,7 +92,7 @@ export class CheckGroup {
       const postedChecks = await getPostedChecks(this.context, this.sha);
       core.debug(`postedChecks: ${JSON.stringify(postedChecks)}`);
       const result = getSubProjResult(subprojs, postedChecks);
-      this.notifyProgress(subprojs, postedChecks, result)
+      await this.notifyProgress(subprojs, postedChecks, result)
       core.endGroup();
 
       if (result === "all_passing") {
@@ -100,6 +104,18 @@ export class CheckGroup {
       }
 
     } catch (error) {
+      core.endGroup();
+      if (isTransientError(error)) {
+        // A GitHub incident says nothing about the PR, so keep polling until the
+        // timeout timer fires rather than failing a PR whose checks are green.
+        this.lastTransientError = describeError(error)
+        core.warning(
+          `Check ${tries} hit a transient GitHub API error, retrying in ${interval / 1000}s:`
+          + ` ${this.lastTransientError}`
+        )
+        this.intervalTimer = setTimeout(() => this.runCheck(subprojs, tries + 1, interval), interval);
+        return;
+      }
       // bubble up the error to the job
       core.setFailed(error);
       clearTimeout(this.intervalTimer)
@@ -119,15 +135,17 @@ export class CheckGroup {
     try {
       await commentOnPr(this.context, result, this.inputs, subprojs, postedChecks)
     } catch (e) {
-      if (e instanceof RequestError && e.status === 403) {
+      // The comment is informational, so a failure to write it must never fail
+      // the job — the check statuses it summarises are unaffected.
+      if (httpStatus(e) === 403) {
         // Forbidden: Resource not accessible by integration
         if (this.canComment) {
-          core.info(`Failed to comment on the PR: ${JSON.stringify(e)}`)
+          core.info(`Failed to comment on the PR: ${describeError(e)}`)
         }
         // Use this boolean to only print the info message once
         this.canComment = false
       } else {
-        throw e
+        core.warning(`Failed to update the PR comment: ${describeError(e)}`)
       }
     }
   }
@@ -137,10 +155,13 @@ export class CheckGroup {
    * a pull request.
    */
   async files(): Promise<string[]> {
-    const pullRequestFiles = await this.context.octokit.paginate(
-      this.context.octokit.pulls.listFiles,
-      this.context.repo({"pull_number": this.pullRequestNumber}),
-      (response) => response.data,
+    const pullRequestFiles = await withTransientRetry(
+      "Listing the files changed in the PR",
+      () => this.context.octokit.paginate(
+        this.context.octokit.pulls.listFiles,
+        this.context.repo({"pull_number": this.pullRequestNumber}),
+        (response) => response.data,
+      ),
     );
     const filenames: string[] = [];
     pullRequestFiles.forEach((pullRequestFile: any) => {

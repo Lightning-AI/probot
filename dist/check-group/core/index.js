@@ -69,7 +69,7 @@ var subproj_matching_1 = require("./subproj_matching");
 var satisfy_expected_checks_1 = require("./satisfy_expected_checks");
 var config_getter_1 = require("./config_getter");
 Object.defineProperty(exports, "fetchConfig", { enumerable: true, get: function () { return config_getter_1.fetchConfig; } });
-var request_error_1 = require("@octokit/request-error");
+var transient_error_1 = require("./transient_error");
 /**
  * The orchestration class.
  */
@@ -79,6 +79,7 @@ var CheckGroup = /** @class */ (function () {
         this.timeoutTimer = setTimeout(function () { return ''; }, 0);
         this.inputs = {};
         this.canComment = true;
+        this.lastTransientError = "";
         this.pullRequestNumber = pullRequestNumber;
         this.config = config;
         this.context = context;
@@ -115,6 +116,9 @@ var CheckGroup = /** @class */ (function () {
                         this.timeoutTimer = setTimeout(function () {
                             clearTimeout(_this.intervalTimer);
                             core.setFailed("The timeout of ".concat(timeout, " minutes has triggered but not all required jobs were passing.")
+                                + (_this.lastTransientError
+                                    ? " The GitHub API was also returning errors, the last being: ".concat(_this.lastTransientError)
+                                    : "")
                                 + " This job will need to be re-run to merge your PR."
                                 + " If you do not have write access to the repository you can ask ".concat(maintainers, " to re-run it for you.")
                                 + " If you have any other questions, you can reach out to ".concat(owner, " for help."));
@@ -131,7 +135,7 @@ var CheckGroup = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
+                        _a.trys.push([0, 3, , 4]);
                         // print in a group to reduce verbosity
                         core.startGroup("Check ".concat(tries));
                         return [4 /*yield*/, getPostedChecks(this.context, this.sha)];
@@ -139,7 +143,9 @@ var CheckGroup = /** @class */ (function () {
                         postedChecks = _a.sent();
                         core.debug("postedChecks: ".concat(JSON.stringify(postedChecks)));
                         result = (0, satisfy_expected_checks_1.getSubProjResult)(subprojs, postedChecks);
-                        this.notifyProgress(subprojs, postedChecks, result);
+                        return [4 /*yield*/, this.notifyProgress(subprojs, postedChecks, result)];
+                    case 2:
+                        _a.sent();
                         core.endGroup();
                         if (result === "all_passing") {
                             core.info("All required checks were successful!");
@@ -149,15 +155,25 @@ var CheckGroup = /** @class */ (function () {
                         else {
                             this.intervalTimer = setTimeout(function () { return _this.runCheck(subprojs, tries + 1, interval); }, interval);
                         }
-                        return [3 /*break*/, 3];
-                    case 2:
+                        return [3 /*break*/, 4];
+                    case 3:
                         error_1 = _a.sent();
+                        core.endGroup();
+                        if ((0, transient_error_1.isTransientError)(error_1)) {
+                            // A GitHub incident says nothing about the PR, so keep polling until the
+                            // timeout timer fires rather than failing a PR whose checks are green.
+                            this.lastTransientError = (0, transient_error_1.describeError)(error_1);
+                            core.warning("Check ".concat(tries, " hit a transient GitHub API error, retrying in ").concat(interval / 1000, "s:")
+                                + " ".concat(this.lastTransientError));
+                            this.intervalTimer = setTimeout(function () { return _this.runCheck(subprojs, tries + 1, interval); }, interval);
+                            return [2 /*return*/];
+                        }
                         // bubble up the error to the job
                         core.setFailed(error_1);
                         clearTimeout(this.intervalTimer);
                         clearTimeout(this.timeoutTimer);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
@@ -179,16 +195,18 @@ var CheckGroup = /** @class */ (function () {
                         return [3 /*break*/, 4];
                     case 3:
                         e_1 = _a.sent();
-                        if (e_1 instanceof request_error_1.RequestError && e_1.status === 403) {
+                        // The comment is informational, so a failure to write it must never fail
+                        // the job — the check statuses it summarises are unaffected.
+                        if ((0, transient_error_1.httpStatus)(e_1) === 403) {
                             // Forbidden: Resource not accessible by integration
                             if (this.canComment) {
-                                core.info("Failed to comment on the PR: ".concat(JSON.stringify(e_1)));
+                                core.info("Failed to comment on the PR: ".concat((0, transient_error_1.describeError)(e_1)));
                             }
                             // Use this boolean to only print the info message once
                             this.canComment = false;
                         }
                         else {
-                            throw e_1;
+                            core.warning("Failed to update the PR comment: ".concat((0, transient_error_1.describeError)(e_1)));
                         }
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
@@ -203,9 +221,10 @@ var CheckGroup = /** @class */ (function () {
     CheckGroup.prototype.files = function () {
         return __awaiter(this, void 0, void 0, function () {
             var pullRequestFiles, filenames;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.context.octokit.paginate(this.context.octokit.pulls.listFiles, this.context.repo({ "pull_number": this.pullRequestNumber }), function (response) { return response.data; })];
+                    case 0: return [4 /*yield*/, (0, transient_error_1.withTransientRetry)("Listing the files changed in the PR", function () { return _this.context.octokit.paginate(_this.context.octokit.pulls.listFiles, _this.context.repo({ "pull_number": _this.pullRequestNumber }), function (response) { return response.data; }); })];
                     case 1:
                         pullRequestFiles = _a.sent();
                         filenames = [];
