@@ -73,6 +73,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchConfig = void 0;
 var user_config_parser_1 = require("./user_config_parser");
 var core = __importStar(require("@actions/core"));
+var transient_error_1 = require("./transient_error");
 /**
  * Fetches the app configuration from the user's repository.
  *
@@ -116,7 +117,7 @@ var readConfig = function (context, branch) { return __awaiter(void 0, void 0, v
         switch (_a.label) {
             case 0:
                 params = context.repo({ path: '.github/checkgroup.yml' });
-                return [4 /*yield*/, context.octokit.config.get(__assign(__assign({}, params), { branch: branch }))];
+                return [4 /*yield*/, (0, transient_error_1.withTransientRetry)("Reading '.github/checkgroup.yml' from '".concat(branch, "'"), function () { return context.octokit.config.get(__assign(__assign({}, params), { branch: branch })); })];
             case 1:
                 config = (_a.sent()).config;
                 return [2 /*return*/, config];

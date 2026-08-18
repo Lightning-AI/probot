@@ -3,6 +3,7 @@ import { Context } from "probot";
 import { parseUserConfig } from "./user_config_parser";
 import { PullRequestEvent } from '@octokit/webhooks-types';
 import * as core from '@actions/core'
+import { withTransientRetry } from "./transient_error";
 
 /**
  * Fetches the app configuration from the user's repository.
@@ -32,6 +33,9 @@ export const fetchConfig = async (context: Context): Promise<CheckGroupConfig> =
 const readConfig = async (context: Context, branch: string): Promise<Record<string, unknown>> => {
   const params = context.repo({path: '.github/checkgroup.yml'})
   // https://github.com/probot/octokit-plugin-config
-  const { config } = await context.octokit.config.get({...params, branch: branch})
+  const { config } = await withTransientRetry(
+    `Reading '.github/checkgroup.yml' from '${branch}'`,
+    () => context.octokit.config.get({...params, branch: branch}),
+  )
   return config
 }
